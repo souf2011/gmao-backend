@@ -7,14 +7,12 @@ use Illuminate\Http\Request;
 
 class ServiceController extends Controller
 {
-    // Afficher tous les services
     public function index()
     {
-        $services = Service::all();  // Récupérer tous les services
-        return response()->json($services);  // Retourner les services en format JSON
+        $services = Service::all();  
+        return response()->json($services); 
     }
 
-    // Afficher un service spécifique
     public function show($id)
     {
         $service = Service::find($id);
@@ -39,10 +37,9 @@ class ServiceController extends Controller
             'description' => $request->description,
         ]);
 
-        return response()->json($service, 201);  // Retourner le service créé
+        return response()->json($service, 201);  
     }
 
-    // Mettre à jour un service existant
     public function update(Request $request, $id)
     {
         $service = Service::find($id);
@@ -73,7 +70,7 @@ class ServiceController extends Controller
             return response()->json(['message' => 'Service non trouvé'], 404);
         }
 
-        $service->delete();  // Supprimer le service
+        $service->delete();  
 
         return response()->json(['message' => 'Service supprimé avec succès']);  // Retourner un message de succès
     }

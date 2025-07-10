@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Equipements;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -19,6 +20,15 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'elhoucine@adm.com',
             'password' => bcrypt('12345678'),
+        ]);
+        $this->call([
+            EmplacementsSeeder::class,
+            CategoriesSeeder::class,
+            EquipementSeeder::class,
+            IntervenantSeeder::class,
+            ServiceSeeder::class
+
+
         ]);
     }
 }
