@@ -21,20 +21,25 @@ class AuthenticatedSessionController extends Controller
             'email' => 'required|email',
             'password' => 'required',
         ]);
-    
+
         $user = User::where('email', $request->email)->first();
-    
+
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'message' => "L'email ou le mot de passe est incorrect.",
             ], 401);
         }
-    
+
         $token = $user->createToken('react-app')->plainTextToken;
-    
+
         return response()->json([
             'token' => $token,
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role, // ➕ Add this line
+            ],
         ]);
     }
 

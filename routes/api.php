@@ -7,6 +7,7 @@ use App\Http\Controllers\EquipementsController;
 use App\Http\Controllers\IntervenantsController;
 use App\Http\Controllers\InterventionsController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\UsersController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('intervention', InterventionsController::class);
     // services Routes
     Route::apiResource('services', ServiceController::class);
+    Route::apiResource('users', UsersController::class);
 
 });
 
