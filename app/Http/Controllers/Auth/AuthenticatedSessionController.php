@@ -29,6 +29,9 @@ class AuthenticatedSessionController extends Controller
                 'message' => "L'email ou le mot de passe est incorrect.",
             ], 401);
         }
+        $user->update([
+            'last_login' => now(),
+        ]);
 
         $token = $user->createToken('react-app')->plainTextToken;
 
@@ -39,6 +42,9 @@ class AuthenticatedSessionController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $user->role, // ➕ Add this line
+                'created_at' => $user->created_at,
+                'last_login' => $user->last_login,
+
             ],
         ]);
     }

@@ -16,7 +16,6 @@ Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('l
 
 // ---------- Protected Routes ----------
 Route::middleware('auth:sanctum')->group(function () {
-
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
