@@ -25,6 +25,10 @@ class User extends Authenticatable
         'role',
         'last_login',
         'created_at',
+        'address',
+        'birthdate',
+        'phone',
+        'img',
         ];
 
     /**
@@ -48,5 +52,9 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+    public function getImgUrlAttribute()
+    {
+        return asset('storage/' . $this->img);
     }
 }

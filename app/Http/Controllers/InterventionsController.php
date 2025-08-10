@@ -3,15 +3,34 @@
 namespace App\Http\Controllers;
 
 use App\Models\Intervention;
+
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class InterventionsController
 {
+
+
     public function index()
     {
-        $Interventions = Intervention::all();
-        return response()->json($Interventions);
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Utilisateur non authentifié'], 401);
+        }
+
+        if ($user->role === 'intervenant') {
+            // Intervenant : ne voit que ses interventions assignées
+            $interventions = Intervention::where('intervenant_id', $user->id)->get();
+        } else {
+            // Admin ou autres : voit toutes les interventions
+            $interventions = Intervention::all();
+        }
+
+        return response()->json($interventions);
     }
+
+
 
 
     public function create()
@@ -24,14 +43,13 @@ class InterventionsController
     {
         $validation = $request->validate([
             'equipement'   => 'required|string|max:255',
-            'responsable'  => 'required|string|max:255',
+            'intervenant_id'  => 'required|string|max:255',
             'description'  => 'nullable|string',
             'date'         => 'nullable|date',
             'emplacement'  => 'nullable|string|max:255',
             'demandeur'    => 'nullable|string|max:255',
             'statut'       => 'nullable|string|max:50',
             'priorite'     => 'nullable|string|max:50',
-            'etat'         => 'nullable|string|max:50',
             'type'         => 'nullable|string|max:50'
         ]);
         if ($request->hasFile('Image')) {
@@ -42,11 +60,25 @@ class InterventionsController
             $filePath = $request->file('Fichier')->store('files', 'public');
             $validation['Fichier'] = $filePath;
         }
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Utilisateur non authentifié'], 401);
+        }
+
+        // Ajoute l'ID de l'utilisateur connecté comme intervenant
+        $validation['intervenant_id'] = $user->id;
+
+
         $intervention = Intervention::create($validation);
+
         return response()->json([
             'message' => 'Intervenant created successfully',
             'intervention' => $intervention
         ], 201);
+
+
+
     }
 
 

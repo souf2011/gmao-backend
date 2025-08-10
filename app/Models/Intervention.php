@@ -21,6 +21,10 @@ class Intervention extends Model
          'priorite',
          'etat',
          'type',
+         'intervenant_id',
     ];
-
+    public function intervenant()
+    {
+        return $this->belongsTo(User::class, 'intervenant_id');
+    }
 }

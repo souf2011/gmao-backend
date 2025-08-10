@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+    use App\Models\Notification;
     use App\Models\User;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Hash;
@@ -10,8 +11,8 @@ class UsersController extends Controller
 {
     public function index()
     {
-        $users = User::all();
-        return response()->json($users );
+        $users = User::orderBy('created_at', 'desc')->get();
+        return response()->json($users);
     }
 
     public function show($id)
@@ -78,6 +79,36 @@ class UsersController extends Controller
             ], 500);
         }
     }
+    public function confirm($id)
+    {
+        $user = User::findOrFail($id);
+        $user->confirmed = 'active';
+        $user->save();
 
+        // Delete notifications related to this user registration
+        Notification::where('related_id', $id)->delete();
 
+        return response()->json(['message' => 'Utilisateur confirmé']);
+    }
+    public function register(Request $request)
+    {
+        // Create user
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+        ]);
+
+        // Create notification for admin
+        Notification::create([
+            'user_id' => 1, // Admin user ID
+            'message' => "New user registered: {$user->name}",
+            'is_read' => false
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User registered and notification sent to admin.'
+        ]);
+    }
 }
