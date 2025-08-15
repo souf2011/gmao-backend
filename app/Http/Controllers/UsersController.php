@@ -5,32 +5,39 @@ namespace App\Http\Controllers;
     use App\Models\Notification;
     use App\Models\User;
     use Illuminate\Http\Request;
+    use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\Hash;
 
 class UsersController extends Controller
 {
     public function index()
     {
-        $users = User::orderBy('created_at', 'desc')->get();
+        $users = User::where('confirmed',1)->with(['role','service'])
+            ->orderBy('created_at', 'desc')
+            ->get();
         return response()->json($users);
     }
 
-    public function show($id)
+    public function show(User $user) // type-hinting automatically resolves {user}
     {
-        $user = User::find($id);
-        if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
-        }
+        $user->load(['role', 'service']); // eager load relationships
         return response()->json($user);
     }
+
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:4',
-            'role' => 'nullable|string|max:50'
+            'role_id' => 'required|integer',
+            'service_id' => 'required|integer',
+            'etablissement_id' => 'required|integer',
+            'address' => 'string|max:255',
+            'birthdate' => 'date',
+            'phone' => 'required|string|max:15'
         ]);
 
         $data['password'] = Hash::make($data['password']);
@@ -43,28 +50,31 @@ class UsersController extends Controller
         ], 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, User $user)
     {
-        $user = User::findOrFail($id);
-
         $data = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $id,
-            'password' => 'sometimes|required|string|min:4',
-            'role' => 'nullable|string|max:50'
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->user_id.',user_id',
+            'password' => 'nullable|string|min:4',
+            'role_id' => 'required|integer|exists:roles,role_id',
+            'service_id' => 'required|integer|exists:services,service_id',
         ]);
 
-        if (isset($data['password'])) {
+        if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']);
         }
 
         $user->update($data);
 
         return response()->json([
             'message' => 'User updated successfully',
-            'data' => $user
+            'data' => $user->load(['role', 'service'])
         ]);
     }
+
 
     public function destroy($id)
     {
@@ -79,17 +89,35 @@ class UsersController extends Controller
             ], 500);
         }
     }
-    public function confirm($id)
+    public function confirm(Request $request, $id)
     {
-        $user = User::findOrFail($id);
-        $user->confirmed = 'active';
-        $user->save();
+        $admin = Auth::user();
 
-        // Delete notifications related to this user registration
-        Notification::where('related_id', $id)->delete();
+        if (!$admin || $admin->role->role !== 'ADMIN') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
 
-        return response()->json(['message' => 'Utilisateur confirmé']);
+        $request->validate([
+            'role_id' => 'required|exists:roles,role_id',
+            'service_id' => 'required|exists:services,service_id',
+        ]);
+
+        $user = User::find($id);
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $user->update([
+            'confirmed' => 1,
+            'role_id' => $request->role_id,
+            'service_id' => $request->service_id,
+        ]);
+        Notification::where('related_id', $user->user_id)
+            ->where('type', 'new-user')
+            ->delete();
+        return response()->json(['message' => 'Utilisateur confirmé avec succès', 'user' => $user]);
     }
+
     public function register(Request $request)
     {
         // Create user

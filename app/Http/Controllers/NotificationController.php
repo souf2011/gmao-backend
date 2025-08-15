@@ -2,22 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Notification;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
     /**
-     * Get all notifications (Admin view).
+     * Get all notifications for the logged-in admin.
      */
     public function index()
     {
-        $userId = auth()->id();
-
-        $notifications = Notification::where(function($query) use ($userId) {
-            $query->where('user_id', $userId)
-                ->orWhereNull('user_id');
-        })
+        $admin = Auth::user(); // get the logged-in user
+        \Log::info('Admin user:', ['user' => $admin]);
+        // Just fetch all notifications for this user
+        $notifications = Notification::where('user_id', $admin->user_id)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -25,54 +24,44 @@ class NotificationController extends Controller
     }
 
     /**
-     * Store a new notification (triggered when a user registers or other events).
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'user_id' => 'nullable|exists:users,id', // user linked to the notification
-            'message' => 'required|string|max:255',
-            'type' => 'nullable|string|max:50', // e.g., 'user_registration'
-        ]);
-
-        $notification = Notification::create([
-            'user_id' => $validated['user_id'] ?? null,
-            'message' => $validated['message'],
-            'type' => $validated['type'] ?? null,
-            'is_read' => false
-        ]);
-
-        return response()->json($notification, 201);
-    }
-
-    /**
      * Mark a notification as read.
      */
     public function markAsRead($id)
     {
-        $notification = Notification::findOrFail($id);
-        $notification->is_read = true;
-        $notification->save();
+        $admin = Auth::user();
+
+        $notification = Notification::where('id', $id)
+            ->where('user_id', $admin->user_id)
+            ->first();
+
+        if (!$notification) {
+            return response()->json(['message' => 'Notification not found'], 404);
+        }
+
+        $notification->update(['read_at' => now()]);
 
         return response()->json(['message' => 'Notification marked as read']);
     }
 
     /**
-     * Delete a notification.
+     * Optional: Create a new notification manually
      */
-    public function destroy($id)
+    public function store(Request $request)
     {
-        $notification = Notification::findOrFail($id);
-        $notification->delete();
+        $request->validate([
+            'user_id' => 'nullable|exists:users,user_id',
+            'message' => 'required|string|max:255',
+            'type' => 'nullable|string|max:100',
+            'related_id' => 'nullable|integer',
+        ]);
 
-        return response()->json(['message' => 'Notification deleted']);
-    }
+        $notification = Notification::create([
+            'user_id' => $request->user_id,
+            'message' => $request->message,
+            'type' => $request->type,
+            'related_id' => $request->related_id,
+        ]);
 
-    /**
-     * Get all unread notifications (for Admin).
-     */
-    public function unread()
-    {
-        return Notification::where('is_read', false)->orderBy('created_at', 'desc')->get();
+        return response()->json($notification, 201);
     }
 }

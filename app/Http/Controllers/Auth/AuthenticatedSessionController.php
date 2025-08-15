@@ -12,17 +12,14 @@ use App\Models\User;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Handle an incoming authentication request.
-     */
+
     public function store(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
         ]);
-
-        $user = User::where('email', $request->email)->first();
+        $user = User::with('role')->where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
@@ -39,12 +36,13 @@ class AuthenticatedSessionController extends Controller
             'token' => $token,
             'user' => [
                 'id' => $user->id,
-                'name' => $user->name,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
                 'email' => $user->email,
-                'role' => $user->role, // ➕ Add this line
+                'role' => $user->role ? $user->role->role : null, // role name from relation
                 'created_at' => $user->created_at,
                 'last_login' => $user->last_login,
-
+                'service' => $user->service? $user->service->service_name : null,
             ],
         ]);
     }
