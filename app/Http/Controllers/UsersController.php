@@ -17,10 +17,38 @@ class UsersController extends Controller
             ->get();
         return response()->json($users);
     }
-
-    public function show(User $user) // type-hinting automatically resolves {user}
+    public function index_intervenant()
     {
-        $user->load(['role', 'service']); // eager load relationships
+        try {
+            // Fetch all users with role_id = 2 (Intervenants)
+            $users = User::where('role_id', 2)
+                ->with(['role', 'service']) // eager load related role and service
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'users' => $users
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des utilisateurs',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
+
+
+
+
+    public function show($id)
+    {
+        $user = User::with(['role', 'service'])->findOrFail($id);
+
         return response()->json($user);
     }
 
@@ -131,7 +159,8 @@ class UsersController extends Controller
         Notification::create([
             'user_id' => 1, // Admin user ID
             'message' => "New user registered: {$user->name}",
-            'is_read' => false
+            'is_read' => false,
+            'type' => 'new_user',
         ]);
 
         return response()->json([

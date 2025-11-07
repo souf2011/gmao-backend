@@ -9,15 +9,15 @@ class Categories extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'categorie_name',
-        'categorie_description',
-        'categorie_image'
+        'nom',
+        'description',
+        'image'
     ];
+    public $timestamps = false;
 
-
-    // public function products()
-    // {
-    //     return $this->hasMany(Products::class, 'categorie_id');
-    // }
+    public function getImageUrlAttribute()
+    {
+        return $this->image ? asset('storage/' . $this->image) : null;
+    }
 
 }

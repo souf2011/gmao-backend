@@ -14,9 +14,10 @@ class NotificationController extends Controller
     public function index()
     {
         $admin = Auth::user(); // get the logged-in user
-        \Log::info('Admin user:', ['user' => $admin]);
+
         // Just fetch all notifications for this user
         $notifications = Notification::where('user_id', $admin->user_id)
+            ->where('read', 0) // only unread
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -31,14 +32,16 @@ class NotificationController extends Controller
         $admin = Auth::user();
 
         $notification = Notification::where('id', $id)
-            ->where('user_id', $admin->user_id)
+            ->where('user_id', $admin->user_id)->where('read', 0)
             ->first();
 
         if (!$notification) {
             return response()->json(['message' => 'Notification not found'], 404);
         }
 
-        $notification->update(['read_at' => now()]);
+        $notification->update(['read' => 1,
+        'read_at' => now()
+        ]);
 
         return response()->json(['message' => 'Notification marked as read']);
     }
@@ -49,19 +52,21 @@ class NotificationController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'user_id' => 'nullable|exists:users,user_id',
-            'message' => 'required|string|max:255',
-            'type' => 'nullable|string|max:100',
+            'user_id' => 'required|exists:users,user_id',
+            'intervention_id' => 'required|exists:interventions,id',
+            'message' => 'required|string',
+            'type' => 'required|string',
             'related_id' => 'nullable|integer',
+             'read' => 'nullable|boolean'
         ]);
 
         $notification = Notification::create([
             'user_id' => $request->user_id,
             'message' => $request->message,
             'type' => $request->type,
-            'related_id' => $request->related_id,
-        ]);
-
+            'intervention_id' => $request->intervention_id,
+            ]);
         return response()->json($notification, 201);
+
     }
 }

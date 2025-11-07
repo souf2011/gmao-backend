@@ -3,14 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Emplacements;
+use App\Models\Equipements;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class EmplacementsController extends Controller
 {
 
     public function index()
     {
-        $emplacements = Emplacements::all();
+        $user = Auth::user();
+
+        $emplacements = Emplacements::all(); // returns all rows + all columns
         return response()->json($emplacements);
     }
 
@@ -71,23 +75,32 @@ class EmplacementsController extends Controller
         ], 200);
     }
 
+    public function interventions()
+    {
+        return $this->hasMany(Intervention::class, 'emplacement_id');
+    }
 
+    // One emplacement can have many equipements
+    public function equipements()
+    {
+        return $this->hasMany(Equipement::class, 'emplacement_id');
+    }
 
     public function destroy($id)
     {
         $emplacement = Emplacements::find($id);
-    
+
         if (!$emplacement) {
             return response()->json([
                 'message' => 'Emplacement non trouvé',
             ], 404);
         }
-    
+
         $emplacement->delete();
-    
+
         return response()->json([
             'message' => 'Emplacement supprimé avec succès',
         ], 200);
     }
-    
+
 }

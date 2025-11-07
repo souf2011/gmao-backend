@@ -13,11 +13,12 @@ class Notification extends Model
 
     // Fillable fields for mass assignment
     protected $fillable = [
+        'intervention_id',
         'user_id',      // admin who will receive the notification
         'message',      // notification message
         'type',         // optional type like 'new-user'
-        'related_id',   // optional related user ID
-        'read_at'       // timestamp when notification was read
+        'related_id',   // optional related user ID,      // timestamp when notification was read
+        'read'
     ];
 
     // If you want timestamps to be auto-handled
@@ -26,6 +27,6 @@ class Notification extends Model
     // Optional: define relationship with User
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'user_id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 }

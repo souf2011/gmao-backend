@@ -7,17 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class Equipements extends Model
 {
+    protected $table = 'equipements';
     protected $fillable = [
-        'Code_Equipement',
-        'Nom_Equipement',
-        'Marque',
+        'Equipement',
+        'Categorie',
         'N_Serie',
-        'Categorie_id',
-        'Emplacement_id',
+        'Emplacement',
         'Compteur',
-        'Status',
+        'status',
+        'Code_Equipement',
+        'Categorie_Equipement',
         'Type_Moteur',
-        'Matricule',
+        'matricule',
         'Modele_Equipement',
         'Operateur',
         'Fin_Garantie',
@@ -27,10 +28,12 @@ class Equipements extends Model
         'Prochaine_Vidange',
         'Nom_Fichier',
         'Commentaire',
-        'Image_Equipement',
     ];
     use HasFactory;
-
+    public function maintenance()
+    {
+        return $this->hasMany(Maintenance::class,'equipement_id');
+    }
     public function emplacements()
     {
         return $this->belongsTo(Emplacements::class, 'Emplacement_id');

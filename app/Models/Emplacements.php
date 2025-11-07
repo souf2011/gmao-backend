@@ -9,6 +9,9 @@ use Illuminate\Testing\Fluent\Concerns\Has;
 class Emplacements extends Model
 {
     use HasFactory;
+    protected  $table = 'emplacements';
+
+
     protected $fillable = [
         'nom_emplacement',
         'description',
@@ -16,4 +19,8 @@ class Emplacements extends Model
         'latitude',
         'longitude'
     ];
+    public $timestamps = false;
+
+
+
 }

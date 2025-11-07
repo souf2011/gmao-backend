@@ -26,6 +26,12 @@ class AuthenticatedSessionController extends Controller
                 'message' => "L'email ou le mot de passe est incorrect.",
             ], 401);
         }
+        if (!$user->confirmed) {
+            return response()->json([
+                'message' => "Votre compte n'est pas encore vérifié par l'administrateur.",
+            ], 403);
+        }
+
         $user->update([
             'last_login' => now(),
         ]);
@@ -35,7 +41,7 @@ class AuthenticatedSessionController extends Controller
         return response()->json([
             'token' => $token,
             'user' => [
-                'id' => $user->id,
+                'user_id' => $user->user_id,
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,
                 'email' => $user->email,

@@ -46,6 +46,12 @@ class User extends Authenticatable
         'last_login' => 'datetime',
         'password' => 'hashed',
     ];
+    public function aprovisionnements()
+    {
+        return $this->hasMany(Aprovisionnement::class);
+    }
+
+
     public function role(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Role::class, 'role_id');
@@ -61,6 +67,10 @@ class User extends Authenticatable
     public function notifications()
     {
         return $this->hasMany(Notification::class, 'user_id', 'user_id');
+    }
+    public function interventions()
+    {
+        return $this->hasMany(Intervention::class, 'intervenant_id', 'user_id');
     }
     public function getFullNameAttribute()
     {
